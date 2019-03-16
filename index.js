@@ -26,8 +26,17 @@ function Level(map) {
 }
 
 Level.prototype.get_square = function(x, y) {
-    return self.map[self.map.length - y - 1][x];
+    var row = self.map[self.map.length - y - 1];
+    if (row) {
+        return self.map[self.map.length - y - 1][x];
+    } else {
+        return undefined;
+    }
 };
+
+Level.prototype.is_wall = function (x, y) {
+    return (this.get_square(floor(x), floor(y)) !== 0);
+}
 
 
 // 0 means empty, 1 means full
@@ -71,8 +80,8 @@ player = new Player(1.5, 1.5, PI / 4);
 // and dir is one of W, N, E, S
 function next_edge(xp, yp, alpha) {
     alpha = normalize_angle(alpha);
-  var xm = floor(xp), xM = xm + 1;
-  var ym = floor(yp), yM = ym + 1;
+    var xm = floor(xp), xM = xm + 1;
+    var ym = floor(yp), yM = ym + 1;
 
     if (xp == xm && alpha > PI / 2 && alpha < 3 * PI / 2) {
         xm -= 1;
@@ -120,6 +129,21 @@ function next_edge(xp, yp, alpha) {
     }
 
     return [walls[res], res];
+}
+
+
+// Assumes player is not in a wall
+function cast_ray(xp, yp, alpha) {
+    var res;
+
+    while (true) {
+      res = next_edge(xp, yp, alpha);
+      xp = res[0][0];
+      yp = res[0][1];
+      if (level.is_wall(xp, yp)) { break; }
+    }
+
+    return res;
 }
 
 

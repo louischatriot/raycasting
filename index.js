@@ -66,23 +66,41 @@ player = new Player(1.5, 1.5, PI / 4);
 
 
 
-// Casts ray from point [xp, yp] at angle alpha
+// Get next grid edge when casting ray from point [xp, yp] at angle alpha
 // Returns [[x, y], dir] where [x, y] is the coordinate of the intercepting wall
 // and dir is one of W, N, E, S
-function cast_ray(xp, yp, alpha) {
+function next_edge(xp, yp, alpha) {
     alpha = normalize_angle(alpha);
+  var xm = floor(xp), xM = xm + 1;
+  var ym = floor(yp), yM = ym + 1;
 
-    if (alpha === 0) { return [[ceil(xp), yp], W]; }
-    if (alpha === PI / 2) { return [[xp, ceil(yp)], N]; }
-    if (alpha === PI) { return [[floor(xp), yp], E]; }
-    if (alpha === 3 * PI / 2) { return [[xp, floor(yp)], S]; }
+    if (xp == xm && alpha > PI / 2 && alpha < 3 * PI / 2) {
+        xm -= 1;
+        xM -= 1;
+    }
+
+    if (yp == ym && alpha > PI) {
+        ym -= 1;
+        yM -= 1;
+    }
+
+    if (alpha === 0) { return [[xM, yp], E]; }
+    if (alpha === PI / 2) { return [[xp, yM], N]; }
+    if (alpha === PI) { return [[xm, yp], W]; }
+    if (alpha === 3 * PI / 2) { return [[xp, ym], S]; }
+
+    var touches = {};  // Is (xp, yp) already on one or two edges?
+    touches[E] = (xp == xM);
+    touches[W] = (xp == xm);
+    touches[N] = (yp == yM);
+    touches[S] = (yp == ym);
 
     var t = tan(alpha);
     var walls = {};
-    walls[W] = [ceil(xp), yp + t * (ceil(xp) - xp)];
-    walls[N] = [xp + (ceil(yp) - yp) / t, ceil(yp)];
-    walls[E] = [floor(xp), yp + t * (floor(xp) - xp)];
-    walls[S] = [xp + (floor(yp) - yp) / t, floor(yp)];
+    walls[E] = [xM, yp + t * (xM - xp)];
+    walls[N] = [xp + (yM - yp) / t, yM];
+    walls[W] = [xm, yp + t * (xm - xp)];
+    walls[S] = [xp + (ym - yp) / t, ym];
 
     dir_v = vector_from_angle(alpha);
 
@@ -91,6 +109,7 @@ function cast_ray(xp, yp, alpha) {
     .map(x => [[x[0][0] - xp, x[0][1] - yp], x[1]])
     .map(x => [scalar_product(x[0], dir_v), x[1]])
     .map(x => [x[0] < 0 ? Infinity : x[0], x[1]])
+    .map(x => [touches[x[1]] ? Infinity : x[0], x[1]])
 
     var min = Infinity, res;
     for (var i = 0; i < candidates.length; i += 1) {

@@ -10,8 +10,6 @@ canvas.style.border = "solid black 1px";
 container.appendChild(canvas);
 var ctx = canvas.getContext('2d');
 var GREEN = 'green', RED = 'red', BLACK = 'black';
-var PI = Math.PI, cos = Math.cos, sin = Math.sin, tan = Math.tan;
-var floor = Math.floor, ceil = Math.ceil;
 var W = "west", N = "north", E = "east", S = "south";
 
 
@@ -51,19 +49,10 @@ function Player(x, y, dir) {
 }
 
 // Player direction always in [0; 2*PI[
-Player.prototype.get_dir() {
+Player.prototype.get_dir = function() {
     return normalize_angle(this.dir);
 }
 
-function normalize_angle(alpha) {
-    while (alpha < 0) {
-        alpha += 2 * PI;
-    }
-    while (alpha >= 2 * PI) {
-        alpha -= 2 * PI;
-    }
-    return alpha;
-}
 
 
 /**
@@ -88,7 +77,30 @@ function cast_ray(xp, yp, alpha) {
     if (alpha === PI) { return [[floor(xp), yp], E]; }
     if (alpha === 3 * PI / 2) { return [[xp, floor(yp)], S]; }
 
+    var t = tan(alpha);
+    var walls = {};
+    walls[W] = [ceil(xp), yp + t * (ceil(xp) - xp)];
+    walls[N] = [xp + (ceil(yp) - yp) / t, ceil(yp)];
+    walls[E] = [floor(xp), yp + t * (floor(xp) - xp)];
+    walls[S] = [xp + (floor(yp) - yp) / t, floor(yp)];
 
+    dir_v = vector_from_angle(alpha);
+
+    var candidates = Object.keys(walls)
+    .map(x => [walls[x], x])
+    .map(x => [[x[0][0] - xp, x[0][1] - yp], x[1]])
+    .map(x => [scalar_product(x[0], dir_v), x[1]])
+    .map(x => [x[0] < 0 ? Infinity : x[0], x[1]])
+
+    var min = Infinity, res;
+    for (var i = 0; i < candidates.length; i += 1) {
+        if (min > candidates[i][0]) {
+            res = candidates[i][1];
+            min = candidates[i][0];
+        }
+    }
+
+    return [walls[res], res];
 }
 
 

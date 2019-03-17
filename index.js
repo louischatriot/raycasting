@@ -152,7 +152,9 @@ var level = new Level(map);
 function Player(x, y, dir) {
     this.x = x || 1.5;
     this.y = y || 1.5;
-    this.dir = dir || PI / 4;
+    this.dir = dir || (dir === 0 ? 0 : PI / 4);
+    this.dir_speed = PI / 2;  // Angle we rotate from per second
+    this.pos_speed = 0.08;
 }
 
 // Player direction always in [0; 2*PI[
@@ -160,10 +162,18 @@ Player.prototype.get_dir = function() {
     return normalize_angle(this.dir);
 }
 
-Player.prototype.update_dir = function(new_dir) {
-    this.dir = new_dir;
+Player.prototype.update_dir = function(increment) {
+    this.dir += increment;
+    this.dir = normalize_angle(this.dir);
     display_frame();
 };
+
+// fwd = 1 => go forward, -1 => go backward
+Player.prototype.update_pos = function(fwd) {
+    this.x += this.pos_speed * cos(this.dir);
+    this.y += this.pos_speed * sin(this.dir);
+    display_frame();
+}
 
 
 
@@ -294,8 +304,23 @@ function display_frame() {
 
 
 
-// DEBUG
-//level.__draw_2d();
+var former_time = Date.now(), time = Date.now();
+
+document.addEventListener('keydown', function(event) {
+    if (event.code === "ArrowLeft") {
+        player.update_dir(0.05);
+        //display_frame();
+    } else if (event.code === "ArrowRight") {
+        player.update_dir(-0.05);
+        //display_frame();
+    } else if (event.code === "ArrowUp") {
+        player.update_pos(1);
+    }
+});
+
+
+
+display_frame();
 
 
 

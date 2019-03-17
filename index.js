@@ -71,6 +71,9 @@ Player.prototype.get_dir = function() {
 var fov_w = PI / 2;
 var fov_h = PI / 2;
 
+var wall_h = 3 / 4;
+var eye_h = wall_h * 2 / 3;
+
 player = new Player(1.5, 1.5, PI / 4);
 
 
@@ -144,6 +147,50 @@ function cast_ray(xp, yp, alpha) {
     }
 
     return res;
+}
+
+
+function display_frame(xp, yp) {
+    var alpha, casted, d, alpha_b, alpha_t, alpha_fov_b, alpha_fov_t;
+
+    for (var x = 0; x < screen_w; x += 1) {
+        alpha = atan(((screen_w / 2 - x) / screen_w) * tan(fov_w));
+        casted = cast_ray(xp, yp, alpha);
+
+        d = distance(xp, yp, casted[0][0], casted[0][1])
+
+        alpha_b = atan(eye_h / d);
+        alpha_t = atan((wall_h - eye_h) / d);
+
+        if (alpha_b >= fov_h / 2) {
+          alpha_fov_b = alpha_b - fov_h / 2;
+        } else {
+          alpha_b = fov_h / 2;
+          alpha_fov_b = 0;
+        }
+
+        if (alpha_t >= fov_h / 2) {
+          alpha_fov_t = alpha_t - fov_h / 2;
+        } else {
+          alpha_t = fov_h / 2;
+          alpha_fov_b = 0;
+        }
+
+        for (var y = 0; y < screen_h; y += 1) {
+          if (y / screen_h < alpha_fov_b / fov_h) {
+                draw_pixel(x, y, BLACK);
+          } else if (y / screen_h < (alpha_fov_b + alpha_b + alpha_t) / fov_h) {
+                draw_pixel(x, y, GREEN);
+          } else {
+                draw_pixel(x, y, BLACK);
+          }
+
+        }
+
+
+    }
+
+
 }
 
 

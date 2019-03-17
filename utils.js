@@ -1,4 +1,4 @@
-var PI = Math.PI, cos = Math.cos, sin = Math.sin, tan = Math.tan;
+var PI = Math.PI, cos = Math.cos, sin = Math.sin, tan = Math.tan, atan = Math.atan;
 var floor = Math.floor, ceil = Math.ceil;
 
 function normalize_angle(alpha) {
@@ -25,4 +25,11 @@ function scalar_product(p1, p2, _x2, _y2) {
 function vector_from_angle(alpha) {
     return [cos(alpha), sin(alpha)];
 }
+
+
+function distance(x1, y1, x2, y2) {
+    return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+}
+
+
 

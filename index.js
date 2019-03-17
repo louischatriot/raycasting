@@ -160,6 +160,11 @@ Player.prototype.get_dir = function() {
     return normalize_angle(this.dir);
 }
 
+Player.prototype.update_dir = function(new_dir) {
+    this.dir = new_dir;
+    display_frame();
+};
+
 
 
 /**
@@ -249,11 +254,13 @@ function cast_ray(xp, yp, alpha) {
 }
 
 
-function display_frame(xp, yp) {
+function display_frame() {
     var alpha, casted, d, alpha_b, alpha_t, alpha_fov_b, alpha_fov_t, color;
 
+    var xp = player.x, yp = player.y, alpha_zero = player.dir;
+
     for (var x = 0; x < screen_w; x += 1) {
-        alpha = atan(((screen_w / 2 - x) / (screen_w / 2)) * tan(fov_w / 2));
+        alpha = atan(((screen_w / 2 - x) / (screen_w / 2)) * tan(fov_w / 2)) + alpha_zero;
         casted = cast_ray(xp, yp, alpha);
         d = distance(xp, yp, casted[0][0], casted[0][1])
 

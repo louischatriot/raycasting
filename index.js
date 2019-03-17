@@ -154,7 +154,7 @@ function display_frame(xp, yp) {
     var alpha, casted, d, alpha_b, alpha_t, alpha_fov_b, alpha_fov_t;
 
     for (var x = 0; x < screen_w; x += 1) {
-        alpha = atan(((screen_w / 2 - x) / screen_w) * tan(fov_w));
+      alpha = atan(((screen_w / 2 - x) / (screen_w / 2)) * tan(fov_w));
         casted = cast_ray(xp, yp, alpha);
 
         d = distance(xp, yp, casted[0][0], casted[0][1])
@@ -162,15 +162,15 @@ function display_frame(xp, yp) {
         alpha_b = atan(eye_h / d);
         alpha_t = atan((wall_h - eye_h) / d);
 
-        if (alpha_b >= fov_h / 2) {
-          alpha_fov_b = alpha_b - fov_h / 2;
+        if (alpha_b <= fov_h / 2) {
+          alpha_fov_b = fov_h / 2 - alpha_b;
         } else {
           alpha_b = fov_h / 2;
           alpha_fov_b = 0;
         }
 
-        if (alpha_t >= fov_h / 2) {
-          alpha_fov_t = alpha_t - fov_h / 2;
+        if (alpha_t <= fov_h / 2) {
+          alpha_fov_t = fov_h / 2 - alpha_t;
         } else {
           alpha_t = fov_h / 2;
           alpha_fov_b = 0;
@@ -180,7 +180,11 @@ function display_frame(xp, yp) {
           if (y / screen_h < alpha_fov_b / fov_h) {
                 draw_pixel(x, y, BLACK);
           } else if (y / screen_h < (alpha_fov_b + alpha_b + alpha_t) / fov_h) {
-                draw_pixel(x, y, GREEN);
+                if (casted[1] === W) {
+                  draw_pixel(x, y, 'lightgreen');
+                } else {
+                  draw_pixel(x, y, GREEN);
+                }
           } else {
                 draw_pixel(x, y, BLACK);
           }

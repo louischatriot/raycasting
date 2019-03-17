@@ -15,14 +15,33 @@ var W = "west", N = "north", E = "east", S = "south";
 
 // (x, y) is orthonormal and regular - (Ox, Oy) = PI / 2
 function draw_pixel(x, y, color) {
-    if (color === undefined) { color = BLACK; }
-    ctx.fillStyle = color;
-    ctx.fillRect(x, screen_h - y, 1, 1);
+    draw_rect(x, y, 1, 1, color);
 }
 
+function draw_rect(x, y, w, h, color) {
+    if (color === undefined) { color = BLACK; }
+    ctx.fillStyle = color;
+    ctx.fillRect(x, screen_h - y - h, w, h);
+}
+
+function draw_rect_outline(x, y, w, h, color) {
+    if (color === undefined) { color = BLACK; }
+    ctx.strokeStyle = color;
+    ctx.strokeRect(x, screen_h - y - h, w, h);
+}
+
+function draw_line(x1, y1, x2, y2, color) {
+    if (color === undefined) { color = "orange"; }
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.moveTo(x1, screen_h - y1);
+    ctx.lineTo(x2, screen_h - y2);
+    ctx.stroke();
+}
 
 function Level(map) {
     this.map = map;
+    this.square_size = 70;
 }
 
 Level.prototype.get_square = function(x, y) {
@@ -34,8 +53,81 @@ Level.prototype.get_square = function(x, y) {
     }
 };
 
-Level.prototype.is_wall = function (x, y) {
+Level.prototype.is_wall = function(x, y, edge) {
+    if (edge === W) { x -= 1; }
+    if (edge === S) { y -= 1; }
+
+    // Very special case ...
+    if (edge === N && x === floor(x) && y === floor(y)) {
+        x -= 0.001;
+        y -= 0.001;
+    }
+
+    //console.log("===> WALL? " + x + " - " + y);
+
+
     return (this.get_square(floor(x), floor(y)) !== 0);
+};
+
+Level.prototype.get_color = function(x, y, side) {
+    var color = this.get_square(floor(x), floor(y));
+
+    if (color === 1) {
+        if (side === W) {
+            return "lightgreen";
+        } else {
+            return "green";
+        }
+    }
+
+    if (color === 2) {
+        if (side === W) {
+            return "red";
+        } else {
+            return "darkred";
+        }
+    }
+
+    return "purple";
+};
+
+Level.prototype.__draw_2d = function() {
+    var s = this.square_size;
+    var X = self.map[0].length;
+    var Y = self.map.length;
+
+    for (var x = 0; x < X; x += 1) {
+        for (var y = 0; y < Y; y += 1) {
+          draw_rect_outline(s * x, s * y, s, s);
+
+          if (level.is_wall(x, y)) {
+              draw_rect(s * x, s * y, s, s, level.get_color(x, y));
+          }
+        }
+    }
+};
+
+Level.prototype.__draw_ray = function(xp, yp, alpha) {
+    var s = this.square_size;
+    var res = cast_ray(xp, yp, alpha);
+    draw_line(xp * s, yp * s, res[0][0] * s, res[0][1] * s);
+};
+
+Level.prototype.__get_ray_drawer = function(xp, yp) {
+    var alpha = 0, self = this;
+    return function() {
+        self.__draw_ray(xp, yp, alpha);
+        alpha += 15 * PI / 180;
+    };
+};
+
+Level.prototype.__draw_all_rays = function(xp, yp, alpha_delta) {
+    var alpha = 0;
+    alpha_delta = alpha_delta || 15;
+    while (alpha < 360) {
+        this.__draw_ray(xp, yp, alpha);
+        alpha += alpha_delta * PI / 180;
+    }
 }
 
 
@@ -43,7 +135,7 @@ Level.prototype.is_wall = function (x, y) {
 var map = [
   [1, 1, 1, 1, 1, 1],
   [1, 0, 0, 0, 0, 1],
-  [1, 0, 1, 1, 0, 1],
+  [1, 0, 2, 2, 0, 1],
   [1, 0, 0, 0, 0, 1],
   [1, 0, 0, 0, 0, 1],
   [1, 1, 1, 1, 1, 1],
@@ -140,10 +232,24 @@ function cast_ray(xp, yp, alpha) {
     var res;
 
     while (true) {
+
+      //console.log("============================");
+      //console.log(xp);
+      //console.log(yp);
+
+
       res = next_edge(xp, yp, alpha);
       xp = res[0][0];
       yp = res[0][1];
-      if (level.is_wall(xp, yp)) { break; }
+
+      //console.log("------");
+      //console.log(xp);
+      //console.log(yp);
+      //console.log(res[1]);
+
+
+
+      if (level.is_wall(xp, yp, res[1])) { break; }
     }
 
     return res;
@@ -201,6 +307,8 @@ function display_frame(xp, yp) {
 
 
 
+// DEBUG
+level.__draw_2d();
 
 
 

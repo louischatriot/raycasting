@@ -53,27 +53,33 @@ Level.prototype.get_square = function(x, y) {
     }
 };
 
-Level.prototype.is_wall = function(x, y, edge) {
-    if (edge === W) { x -= 1; }
-    if (edge === S) { y -= 1; }
+Level.prototype.is_wall = function(x, y, side) {
+    if (side === W) { x -= 1; }
+    if (side === S) { y -= 1; }
 
     // Very special case ...
-    if (edge === N && x === floor(x) && y === floor(y)) {
+    if (side === N && x === floor(x) && y === floor(y)) {
         x -= 0.001;
         y -= 0.001;
     }
-
-    //console.log("===> WALL? " + x + " - " + y);
-
 
     return (this.get_square(floor(x), floor(y)) !== 0);
 };
 
 Level.prototype.get_color = function(x, y, side) {
+    if (side === W) { x -= 1; }
+    if (side === S) { y -= 1; }
+
+    // Very special case ...
+    if (side === N && x === floor(x) && y === floor(y)) {
+        x -= 0.001;
+        y -= 0.001;
+    }
+
     var color = this.get_square(floor(x), floor(y));
 
     if (color === 1) {
-        if (side === W) {
+        if (side === E) {
             return "lightgreen";
         } else {
             return "green";
@@ -81,7 +87,7 @@ Level.prototype.get_color = function(x, y, side) {
     }
 
     if (color === 2) {
-        if (side === W) {
+        if (side === E) {
             return "red";
         } else {
             return "darkred";
@@ -166,7 +172,7 @@ var fov_h = PI / 2;
 var wall_h = 3 / 4;
 var eye_h = wall_h * 2 / 3;
 
-player = new Player(1.5, 1.5, PI / 4);
+player = new Player(1.5, 1.5, 0);
 
 
 
@@ -232,22 +238,9 @@ function cast_ray(xp, yp, alpha) {
     var res;
 
     while (true) {
-
-      //console.log("============================");
-      //console.log(xp);
-      //console.log(yp);
-
-
       res = next_edge(xp, yp, alpha);
       xp = res[0][0];
       yp = res[0][1];
-
-      //console.log("------");
-      //console.log(xp);
-      //console.log(yp);
-      //console.log(res[1]);
-
-
 
       if (level.is_wall(xp, yp, res[1])) { break; }
     }
@@ -257,42 +250,39 @@ function cast_ray(xp, yp, alpha) {
 
 
 function display_frame(xp, yp) {
-    var alpha, casted, d, alpha_b, alpha_t, alpha_fov_b, alpha_fov_t;
+    var alpha, casted, d, alpha_b, alpha_t, alpha_fov_b, alpha_fov_t, color;
 
     for (var x = 0; x < screen_w; x += 1) {
-      alpha = atan(((screen_w / 2 - x) / (screen_w / 2)) * tan(fov_w));
+        alpha = atan(((screen_w / 2 - x) / (screen_w / 2)) * tan(fov_w / 2));
         casted = cast_ray(xp, yp, alpha);
-
         d = distance(xp, yp, casted[0][0], casted[0][1])
 
         alpha_b = atan(eye_h / d);
         alpha_t = atan((wall_h - eye_h) / d);
 
         if (alpha_b <= fov_h / 2) {
-          alpha_fov_b = fov_h / 2 - alpha_b;
+            alpha_fov_b = fov_h / 2 - alpha_b;
         } else {
-          alpha_b = fov_h / 2;
-          alpha_fov_b = 0;
+            alpha_b = fov_h / 2;
+            alpha_fov_b = 0;
         }
 
         if (alpha_t <= fov_h / 2) {
-          alpha_fov_t = fov_h / 2 - alpha_t;
+            alpha_fov_t = fov_h / 2 - alpha_t;
         } else {
-          alpha_t = fov_h / 2;
-          alpha_fov_b = 0;
+            alpha_t = fov_h / 2;
+            alpha_fov_b = 0;
         }
+
+        color = level.get_color(casted[0][0], casted[0][1], casted[1]);
 
         for (var y = 0; y < screen_h; y += 1) {
           if (y / screen_h < alpha_fov_b / fov_h) {
-                draw_pixel(x, y, BLACK);
+              draw_pixel(x, y, BLACK);
           } else if (y / screen_h < (alpha_fov_b + alpha_b + alpha_t) / fov_h) {
-                if (casted[1] === W) {
-                  draw_pixel(x, y, 'lightgreen');
-                } else {
-                  draw_pixel(x, y, GREEN);
-                }
+              draw_pixel(x, y, color);
           } else {
-                draw_pixel(x, y, BLACK);
+              draw_pixel(x, y, BLACK);
           }
 
         }
@@ -308,7 +298,7 @@ function display_frame(xp, yp) {
 
 
 // DEBUG
-level.__draw_2d();
+//level.__draw_2d();
 
 
 

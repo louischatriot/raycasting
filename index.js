@@ -1,5 +1,5 @@
-var screen_w = 1280
-  , screen_h = 1024
+var screen_w = 1125
+  , screen_h = 900
   , container = document.getElementById("container")
   , canvas = document.createElement("canvas")
   ;
@@ -172,7 +172,7 @@ function Player(x, y, dir) {
     this.y = y || 1.5;
     this.dir = dir || (dir === 0 ? 0 : PI / 4);
     this.dir_speed = PI / 2;  // Angle we rotate from per second
-    this.pos_speed = 0.08;
+    this.pos_speed = 1.6;       // How much tiles to advance in one second
 }
 
 // Player direction always in [0; 2*PI[
@@ -180,17 +180,18 @@ Player.prototype.get_dir = function() {
     return normalize_angle(this.dir);
 }
 
-Player.prototype.update_dir = function(increment) {
-    this.dir += increment;
+// dir = +1 (left) or -1 (right)
+// time_delta in ms
+Player.prototype.update_dir = function(dir, time_delta) {
+    this.dir += dir * this.dir_speed * time_delta / 1000;
     this.dir = normalize_angle(this.dir);
-    display_frame();
 };
 
+// time_delta in ms
 // fwd = 1 => go forward, -1 => go backward
-Player.prototype.update_pos = function(fwd) {
-    this.x += this.pos_speed * cos(this.dir);
-    this.y += this.pos_speed * sin(this.dir);
-    display_frame();
+Player.prototype.update_pos = function(fwd, time_delta) {
+    this.x += this.pos_speed * cos(this.dir) * fwd * time_delta / 1000;
+    this.y += this.pos_speed * sin(this.dir) * fwd * time_delta / 1000;
 }
 
 
@@ -323,20 +324,52 @@ function display_frame() {
 
 
 var former_time = Date.now(), time = Date.now();
+var pressed = {};
+var started = false;
 
 document.addEventListener('keydown', function(event) {
-    if (event.code === "ArrowLeft") {
-        player.update_dir(0.065);
-    } else if (event.code === "ArrowRight") {
-        player.update_dir(-0.065);
-    } else if (event.code === "ArrowUp") {
-        player.update_pos(1);
+    pressed[event.code.toLowerCase().replace(/arrow/, '')] = true;
+
+    if (event.code.toLowerCase() === "enter" && !started) {
+        started = true;
+        document.getElementById("message").remove();
+        request_animation_frame();
     }
 });
 
+document.addEventListener('keyup', function(event) {
+    pressed[event.code.toLowerCase().replace(/arrow/, '')] = false;
+});
 
+function request_animation_frame() {
+    time_delta = time - former_time;
+    former_time = time;
 
-display_frame();
+    if (pressed.left && pressed.right) {
+        // Do nothing!
+    } else if (pressed.left) {
+        player.update_dir(1, time_delta);
+    } else if (pressed.right) {
+        player.update_dir(-1, time_delta);
+    }
+
+    if (pressed.up && pressed.down) {
+        // Do nothing!
+    } else if (pressed.up) {
+        player.update_pos(1, time_delta);
+    } else if (pressed.down) {
+        player.update_pos(-1, time_delta);
+    }
+
+    display_frame();
+    time = Date.now();
+
+    // Log FPS
+    if (time_delta > 0) { console.log(1000 / time_delta); }
+
+    setTimeout(request_animation_frame, 5)  // 200 FPS max
+}
+
 
 
 

@@ -190,8 +190,17 @@ Player.prototype.update_dir = function(dir, time_delta) {
 // time_delta in ms
 // fwd = 1 => go forward, -1 => go backward
 Player.prototype.update_pos = function(fwd, time_delta) {
-    this.x += this.pos_speed * cos(this.dir) * fwd * time_delta / 1000;
-    this.y += this.pos_speed * sin(this.dir) * fwd * time_delta / 1000;
+    var delta_x = this.pos_speed * cos(this.dir) * fwd * time_delta / 1000;
+    var delta_y = this.pos_speed * sin(this.dir) * fwd * time_delta / 1000;
+
+    if (!level.is_wall(this.x + delta_x, this.y + delta_y)) {
+        this.x += delta_x;
+        this.y += delta_y;
+    } else if (!level.is_wall(this.x, this.y + delta_y)) {
+        this.y += delta_y;
+    } else if (!level.is_wall(this.x + delta_x, this.y)) {
+        this.x += delta_x;
+    }
 }
 
 

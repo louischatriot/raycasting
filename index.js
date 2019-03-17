@@ -1,5 +1,5 @@
-var screen_w = 640
-  , screen_h = 480
+var screen_w = 1280
+  , screen_h = 1024
   , container = document.getElementById("container")
   , canvas = document.createElement("canvas")
   ;
@@ -137,7 +137,7 @@ Level.prototype.__draw_all_rays = function(xp, yp, alpha_delta) {
 }
 
 
-// 0 means empty, 1 means full
+// 0 means empty, 1 means green wall, 2 is red wall
 var map = [
   [1, 1, 1, 1, 1, 1],
   [1, 0, 0, 0, 0, 1],
@@ -146,6 +146,24 @@ var map = [
   [1, 0, 0, 0, 0, 1],
   [1, 1, 1, 1, 1, 1],
 ]
+
+
+var map = [
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+  [1, 0, 2, 0, 0, 2, 0, 0, 2, 2, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+  [1, 0, 2, 0, 1, 1, 1, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+  [1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1],
+  [1, 0, 2, 0, 1, 0, 1, 0, 0, 0, 1],
+  [1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1],
+  [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+]
+
+
 var level = new Level(map);
 
 
@@ -181,13 +199,13 @@ Player.prototype.update_pos = function(fwd) {
  * Game-specific variables
  */
 // Field of view, defined as Lateral ("width") and height angles
-var fov_w = PI / 2;
+var fov_w = PI / 3;
 var fov_h = PI / 2;
 
 var wall_h = 3 / 4;
 var eye_h = wall_h * 2 / 3;
 
-player = new Player(1.5, 1.5, 0);
+player = new Player(1.5, 1.5, PI / 4);
 
 
 
@@ -308,11 +326,9 @@ var former_time = Date.now(), time = Date.now();
 
 document.addEventListener('keydown', function(event) {
     if (event.code === "ArrowLeft") {
-        player.update_dir(0.05);
-        //display_frame();
+        player.update_dir(0.065);
     } else if (event.code === "ArrowRight") {
-        player.update_dir(-0.05);
-        //display_frame();
+        player.update_dir(-0.065);
     } else if (event.code === "ArrowUp") {
         player.update_pos(1);
     }

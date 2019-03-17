@@ -255,7 +255,7 @@ function cast_ray(xp, yp, alpha) {
 
 
 function display_frame() {
-    var alpha, casted, d, alpha_b, alpha_t, alpha_fov_b, alpha_fov_t, color;
+    var alpha, casted, d, alpha_b, alpha_t, alpha_fov_b, alpha_fov_t, color, y1, y2;
 
     var xp = player.x, yp = player.y, alpha_zero = player.dir;
 
@@ -281,23 +281,13 @@ function display_frame() {
             alpha_fov_b = 0;
         }
 
+        // Draw vertical line x
+        draw_rect(x, 0, 1, screen_h, BLACK);
         color = level.get_color(casted[0][0], casted[0][1], casted[1]);
-
-        for (var y = 0; y < screen_h; y += 1) {
-          if (y / screen_h < alpha_fov_b / fov_h) {
-              draw_pixel(x, y, BLACK);
-          } else if (y / screen_h < (alpha_fov_b + alpha_b + alpha_t) / fov_h) {
-              draw_pixel(x, y, color);
-          } else {
-              draw_pixel(x, y, BLACK);
-          }
-
-        }
-
-
+        y1 = screen_h * alpha_fov_b / fov_h;
+        y2 = screen_h * (alpha_fov_b + alpha_b + alpha_t) / fov_h;
+        draw_rect(x, y1, 1, y2 - y1, color);
     }
-
-
 }
 
 
